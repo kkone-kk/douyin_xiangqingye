@@ -10,16 +10,8 @@ import CarouselControl from './components/CarouselControl';
 import LoadingOverlay from './components/LoadingOverlay';
 import SettingsModal from './components/SettingsModal';
 import { translations } from './constants/translations';
-import { Wand2, AlertCircle, Key, Globe, Download, Loader2, Layers, RotateCcw, CheckCircle, Settings } from 'lucide-react';
+import { Wand2, AlertCircle, Globe, Download, Loader2, Layers, RotateCcw, CheckCircle, Settings } from 'lucide-react';
 import JSZip from 'jszip';
-
-// Extend Window interface for AI Studio
-declare global {
-  interface AIStudio {
-    hasSelectedApiKey: () => Promise<boolean>;
-    openSelectKey: () => Promise<void>;
-  }
-}
 
 const App: React.FC = () => {
   const [language, setLanguage] = useState<'zh' | 'en'>('zh');
@@ -27,7 +19,6 @@ const App: React.FC = () => {
   const [inputData, setInputData] = useState<ProductInput | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [apiKeyReady, setApiKeyReady] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   
@@ -38,20 +29,7 @@ const App: React.FC = () => {
 
   const t = translations[language];
 
-  // 1. Check for API Key selection on mount
-  useEffect(() => {
-    const checkApiKey = async () => {
-      if (window.aistudio && window.aistudio.hasSelectedApiKey) {
-        const hasKey = await window.aistudio.hasSelectedApiKey();
-        setApiKeyReady(hasKey);
-      } else {
-        setApiKeyReady(false);
-      }
-    };
-    checkApiKey();
-  }, []);
-
-  // 2. Load persisted state on mount
+  // 1. Load persisted state on mount
   useEffect(() => {
     const loadState = async () => {
       try {
@@ -74,7 +52,7 @@ const App: React.FC = () => {
     loadState();
   }, []);
 
-  // 3. Auto-save state when critical data changes
+  // 2. Auto-save state when critical data changes
   useEffect(() => {
     if (step !== ProcessingStep.Input && analysis && inputData && !isLoadingState) {
       const timer = setTimeout(() => {
@@ -84,19 +62,6 @@ const App: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [inputData, analysis, step, isLoadingState]);
-
-  const handleSelectKey = async () => {
-    try {
-      if (window.aistudio && window.aistudio.openSelectKey) {
-        await window.aistudio.openSelectKey();
-        setApiKeyReady(true);
-        setError(null);
-      }
-    } catch (e) {
-      console.error(e);
-      setError("Failed to select API Key. Please try again.");
-    }
-  };
 
   const handleReset = async () => {
     if (window.confirm(t.resetConfirm)) {
@@ -109,11 +74,6 @@ const App: React.FC = () => {
   };
 
   const handleStart = async (data: ProductInput) => {
-    if (!apiKeyReady) {
-      setError(t.apiKeyError);
-      return;
-    }
-
     setInputData(data);
     setStep(ProcessingStep.Analyzing);
     setError(null);
@@ -310,31 +270,6 @@ const App: React.FC = () => {
       setIsZipping(false);
     }
   };
-
-  if (!apiKeyReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border border-gray-100">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Key size={32} />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">{t.apiKeyRequired}</h1>
-          <p className="text-gray-600 mb-6">{t.apiKeyDesc}</p>
-          <button 
-            onClick={handleSelectKey}
-            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
-          >
-            {t.selectKeyBtn}
-          </button>
-          <div className="mt-4 text-xs text-gray-400">
-            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="underline hover:text-blue-500">
-              {t.viewBilling}
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (isLoadingState) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-orange-500" /></div>;

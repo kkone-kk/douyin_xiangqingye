@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Key, Globe, Save } from 'lucide-react';
+import { X, Globe, Save } from 'lucide-react';
 import { translations } from '../constants/translations';
 import { loadSettings, saveSettings } from '../services/storageService';
 
@@ -27,12 +27,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, lang }) 
     onClose();
   };
 
-  const handleChangeKey = async () => {
-    if (window.aistudio && window.aistudio.openSelectKey) {
-      await window.aistudio.openSelectKey();
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -49,22 +43,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, lang }) 
 
         <div className="p-6 space-y-6">
           
-          {/* API Key Section */}
-          <div className="space-y-3">
-             <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm uppercase tracking-wider">
-                <Key size={16} /> {t.apiKeyManagement}
-             </div>
-             <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                <p className="text-xs text-indigo-700 mb-3">{t.changeKeyDesc}</p>
-                <button 
-                  onClick={handleChangeKey}
-                  className="w-full py-2 bg-white border border-indigo-200 text-indigo-700 font-bold rounded-lg text-sm hover:bg-indigo-50 transition-colors shadow-sm"
-                >
-                  {t.changeApiKey}
-                </button>
-             </div>
-          </div>
-
           {/* Proxy Section */}
           <div className="space-y-3">
              <div className="flex items-center gap-2 text-orange-600 font-bold text-sm uppercase tracking-wider">
